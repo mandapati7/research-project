@@ -81,11 +81,20 @@ def run_search(_client, q, developer_message, model, tools):
         instructions=developer_message,
         tools=tools
     )
-    return {
-        "query": q,
-        "resp_id": web_search.output[1].id,
-        "research_output": web_search.output[1].content[0].text
-    }
+    # Defensive: check output length and handle errors
+    if len(web_search.output) > 1 and hasattr(web_search.output[1], 'id') and hasattr(web_search.output[1], 'content'):
+        return {
+            "query": q,
+            "resp_id": web_search.output[1].id,
+            "research_output": web_search.output[1].content[0].text
+        }
+    else:
+        # Return error info for debugging
+        return {
+            "query": q,
+            "resp_id": None,
+            "research_output": f"Error: Unexpected response format: {web_search.output}"
+        }
 
 # Function to evaluate if the research goal is met
 @st.cache_data(show_spinner=False)
@@ -195,9 +204,7 @@ if st.session_state['topic']:
             # Step 5: Evaluate if enough information is collected
             with st.spinner('Evaluating if enough information is collected...'):
                 enough = evaluate(client, collected, goal, developer_message, MODEL)
-            if enough:
-                st.success('Sufficient information collected!')
-            else:
+            if not enough:
                 st.warning('Not enough information. Generating more queries...')
                 with st.spinner('Generating more queries...'):
                     queries = get_more_queries(client, collected, goal, developer_message, MODEL, goal_and_queries_id)
@@ -208,5 +215,29 @@ if st.session_state['topic']:
             # Step 6: Write and display the final report
             with st.spinner('Writing final research report...'):
                 report = write_report(client, collected, goal, developer_message, MODEL)
+            # Show Q&A summary as plain text for printing/analysis
+            st.markdown('### Clarifying Questions and Answers')
+            for i, (q, a) in enumerate(zip(questions, answers)):
+                st.markdown(f"**Q{i+1}: {q}**  <br>**A{i+1}:** {a}", unsafe_allow_html=True)
             st.markdown('### Final Research Report')
             st.markdown(report, unsafe_allow_html=True)
+            # Add print-specific CSS to expand all textareas and inputs for printing
+            st.markdown("""
+                <style>
+                @media print {
+                  textarea, input[type="text"] {
+                    height: auto !important;
+                    min-height: 40px !important;
+                    max-height: none !important;
+                    overflow: visible !important;
+                    white-space: pre-wrap !important;
+                  }
+                  .stTextInput>div>div>input {
+                    width: 100% !important;
+                    min-width: 300px !important;
+                  }
+                }
+                </style>
+            """, unsafe_allow_html=True)
+            # Show print instructions instead of a print button
+            st.info('To print or save the report, use your browser\'s print feature: press Ctrl+P (Windows) or Cmd+P (Mac).')
