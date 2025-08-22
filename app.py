@@ -52,6 +52,9 @@ Reply only with the questions.
         input=prompt_to_clarify,
         instructions=developer_message
     )
+    # Split and filter out empty questions
+    questions = [q.strip() for q in clarify.output[0].content[0].text.split("\n") if q.strip()]
+    return questions, clarify.id
     questions = clarify.output[0].content[0].text.split("\n")
     return questions, clarify.id
 
