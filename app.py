@@ -221,21 +221,31 @@ if st.session_state['topic']:
                 st.markdown(f"**Q{i+1}: {q}**  <br>**A{i+1}:** {a}", unsafe_allow_html=True)
             st.markdown('### Final Research Report')
             st.markdown(report, unsafe_allow_html=True)
-            # Add print-specific CSS to expand all textareas and inputs for printing
+            # Add print-specific CSS to expand all textareas and inputs for printing and remove scroll for print
             st.markdown("""
                 <style>
                 @media print {
-                  textarea, input[type="text"] {
-                    height: auto !important;
-                    min-height: 40px !important;
-                    max-height: none !important;
-                    overflow: visible !important;
-                    white-space: pre-wrap !important;
-                  }
-                  .stTextInput>div>div>input {
-                    width: 100% !important;
-                    min-width: 300px !important;
-                  }
+                    html, body, .main, .block-container, .stApp {
+                        height: auto !important;
+                        overflow: visible !important;
+                    }
+                    .stApp {
+                        max-height: none !important;
+                    }
+                    .block-container {
+                        padding-top: 0 !important;
+                    }
+                    textarea, input[type="text"] {
+                        height: auto !important;
+                        min-height: 40px !important;
+                        max-height: none !important;
+                        overflow: visible !important;
+                        white-space: pre-wrap !important;
+                    }
+                    .stTextInput>div>div>input {
+                        width: 100% !important;
+                        min-width: 300px !important;
+                    }
                 }
                 </style>
             """, unsafe_allow_html=True)
